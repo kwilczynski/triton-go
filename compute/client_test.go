@@ -12,6 +12,12 @@ import (
 	"github.com/joyent/triton-go/testutils"
 )
 
+const (
+	testHeaderName = "X-Test-Header"
+	testHeaderVal1 = "number one"
+	testHeaderVal2 = "number two"
+)
+
 // MockComputeClient is used to mock out compute.ComputeClient for all tests
 // under the triton-go/compute package
 func MockComputeClient() *compute.ComputeClient {
@@ -21,12 +27,6 @@ func MockComputeClient() *compute.ComputeClient {
 		}),
 	}
 }
-
-const (
-	testHeaderName = "X-Test-Header"
-	testHeaderVal1 = "number one"
-	testHeaderVal2 = "number two"
-)
 
 func TestSetHeader(t *testing.T) {
 	computeClient := MockComputeClient()
@@ -57,23 +57,23 @@ func TestSetHeader(t *testing.T) {
 func overrideHeaderTest(t *testing.T) func(req *http.Request) (*http.Response, error) {
 	return func(req *http.Request) (*http.Response, error) {
 		if req.Header.Get(testHeaderName) == "" {
-			t.Errorf("Request header should contain '%s'", testHeaderName)
+			t.Errorf("Request header should contain %q", testHeaderName)
 		}
+
 		testHeader := strings.Join(req.Header[testHeaderName], ",")
 		if !strings.Contains(testHeader, testHeaderVal1) {
-			t.Errorf("Request header should contain '%s': got '%s'", testHeaderVal1, testHeader)
+			t.Errorf("request header should contain %q, got %q", testHeaderVal1, testHeader)
 		}
 		if !strings.Contains(testHeader, testHeaderVal2) {
-			t.Errorf("Request header should contain '%s': got '%s'", testHeaderVal2, testHeader)
+			t.Errorf("request header should contain %q, got %q", testHeaderVal2, testHeader)
 		}
 
 		header := http.Header{}
 		header.Add("Content-Type", "application/json")
 
 		body := strings.NewReader(`{
-	"us-east-1": "https://us-east-1.api.joyentcloud.com"
-}
-`)
+  "us-east-1": "https://us-east-1.api.joyentcloud.com"
+}`)
 
 		return &http.Response{
 			StatusCode: http.StatusOK,

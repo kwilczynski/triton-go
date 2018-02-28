@@ -41,12 +41,10 @@ func (c *SnapshotsClient) List(ctx context.Context, input *ListSnapshotsInput) (
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list snapshots")
 	}
+	defer respReader.Close()
 
 	var result []*Snapshot
 	decoder := json.NewDecoder(respReader)
@@ -69,12 +67,10 @@ func (c *SnapshotsClient) Get(ctx context.Context, input *GetSnapshotInput) (*Sn
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get snapshot")
 	}
+	defer respReader.Close()
 
 	var result *Snapshot
 	decoder := json.NewDecoder(respReader)
@@ -97,12 +93,10 @@ func (c *SnapshotsClient) Delete(ctx context.Context, input *DeleteSnapshotInput
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return errors.Wrap(err, "unable to delete snapshot")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -119,12 +113,10 @@ func (c *SnapshotsClient) StartMachine(ctx context.Context, input *StartMachineF
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
-		return errors.Wrap(err, "unable to start machine")
+		return errors.Wrap(err, "unable to start machine from snapshot")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -147,12 +139,10 @@ func (c *SnapshotsClient) Create(ctx context.Context, input *CreateSnapshotInput
 	}
 
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create snapshot")
 	}
+	defer respReader.Close()
 
 	var result *Snapshot
 	decoder := json.NewDecoder(respReader)

@@ -21,7 +21,10 @@ import (
 	"github.com/joyent/triton-go/testutils"
 )
 
-const accountURL = "testing"
+const (
+	accountURL    = "testing"
+	testMachineId = "123-3456-2335"
+)
 
 var (
 	listSnapshotErrorType             = errors.New("unable to list snapshots")
@@ -29,7 +32,6 @@ var (
 	deleteSnapshotErrorType           = errors.New("unable to delete snapshot")
 	createSnapshotErrorType           = errors.New("unable to create snapshot")
 	startMachineFromSnapshotErrorType = errors.New("unable to start machine")
-	testMachineId                     = "123-3456-2335"
 )
 
 func TestListSnapshots(t *testing.T) {
@@ -39,7 +41,7 @@ func TestListSnapshots(t *testing.T) {
 		defer testutils.DeactivateClient()
 
 		ping, err := cc.Snapshots().List(ctx, &compute.ListSnapshotsInput{
-			MachineID: "123-3456-2335",
+			MachineID: testMachineId,
 		})
 		if err != nil {
 			return nil, err
@@ -56,7 +58,7 @@ func TestListSnapshots(t *testing.T) {
 		}
 
 		if resp == nil {
-			t.Fatalf("Expected an output but got nil")
+			t.Fatal("expected response, got nil")
 		}
 	})
 
@@ -69,7 +71,7 @@ func TestListSnapshots(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, got %v", err)
 		}
 	})
 
@@ -82,7 +84,7 @@ func TestListSnapshots(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, got %v", err)
 		}
 	})
 
@@ -98,7 +100,7 @@ func TestListSnapshots(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to list snapshots") {
-			t.Errorf("expected error to equal testError: found %v", err)
+			t.Errorf("expected error to equal testError, got %v", err)
 		}
 	})
 }
@@ -110,7 +112,7 @@ func TestGetSnapshot(t *testing.T) {
 		defer testutils.DeactivateClient()
 
 		snapshot, err := cc.Snapshots().Get(ctx, &compute.GetSnapshotInput{
-			MachineID: "123-3456-2335",
+			MachineID: testMachineId,
 			Name:      "sample-snapshot",
 		})
 		if err != nil {
@@ -289,22 +291,22 @@ func listSnapshotsSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[
-	{
-	"name": "sample-snapshot",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z"
+  {
+    "name": "sample-snapshot",
+    "state": "queued",
+    "updated": "2015-12-23T06:41:11.032Z",
+    "created": "2015-12-23T06:41:11.032Z"
   },
   {
-	"name": "sample-snapshot-2",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z"
+    "name": "sample-snapshot-2",
+    "state": "queued",
+    "updated": "2015-12-23T06:41:11.032Z",
+    "created": "2015-12-23T06:41:11.032Z"
   }
 ]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -315,9 +317,9 @@ func listSnapshotEmpty(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -326,13 +328,14 @@ func listSnapshotBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-	"name": "sample-snapshot",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z",}]`)
+  "name": "sample-snapshot",
+  "state": "queued",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z",
+}]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -347,15 +350,14 @@ func getSnapshotSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "sample-snapshot",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z"
-  }
-`)
+  "name": "sample-snapshot",
+  "state": "queued",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z"
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -366,13 +368,14 @@ func getSnapshotBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "sample-snapshot",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z",}`)
+  "name": "sample-snapshot",
+  "state": "queued",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z",
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -383,9 +386,9 @@ func getSnapshotEmpty(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -398,8 +401,9 @@ func deleteSnapshotSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 204,
+		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -412,8 +416,9 @@ func startMachineFromSnapshotSuccess(req *http.Request) (*http.Response, error) 
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 202,
+		StatusCode: http.StatusAccepted,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -426,15 +431,14 @@ func createSnapshotSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "sample-snapshot",
-	"state": "queued",
-	"updated": "2015-12-23T06:41:11.032Z",
-	"created": "2015-12-23T06:41:11.032Z"
-  }
-`)
+  "name": "sample-snapshot",
+  "state": "queued",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z"
+}`)
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil

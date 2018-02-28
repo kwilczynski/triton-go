@@ -37,12 +37,10 @@ func (c *ServicesClient) List(ctx context.Context, _ *ListServicesInput) ([]*Ser
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list services")
 	}
+	defer respReader.Close()
 
 	var intermediate map[string]string
 	decoder := json.NewDecoder(respReader)
@@ -50,8 +48,10 @@ func (c *ServicesClient) List(ctx context.Context, _ *ListServicesInput) ([]*Ser
 		return nil, errors.Wrap(err, "unable to decode list services response")
 	}
 
+	var i int
+
 	keys := make([]string, len(intermediate))
-	i := 0
+	i = 0
 	for k := range intermediate {
 		keys[i] = k
 		i++

@@ -91,12 +91,10 @@ func (c *ImagesClient) List(ctx context.Context, input *ListImagesInput) ([]*Ima
 		Query:  query,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list images")
 	}
+	defer respReader.Close()
 
 	var result []*Image
 	decoder := json.NewDecoder(respReader)
@@ -118,12 +116,10 @@ func (c *ImagesClient) Get(ctx context.Context, input *GetImageInput) (*Image, e
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get image")
 	}
+	defer respReader.Close()
 
 	var result *Image
 	decoder := json.NewDecoder(respReader)
@@ -145,12 +141,10 @@ func (c *ImagesClient) Delete(ctx context.Context, input *DeleteImageInput) erro
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return errors.Wrap(err, "unable to delete image")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -177,12 +171,10 @@ func (c *ImagesClient) Export(ctx context.Context, input *ExportImageInput) (*Ma
 		Query:  query,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to export image")
 	}
+	defer respReader.Close()
 
 	var result *MantaLocation
 	decoder := json.NewDecoder(respReader)
@@ -212,12 +204,10 @@ func (c *ImagesClient) CreateFromMachine(ctx context.Context, input *CreateImage
 		Body:   input,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create machine from image")
 	}
+	defer respReader.Close()
 
 	var result *Image
 	decoder := json.NewDecoder(respReader)
@@ -251,12 +241,10 @@ func (c *ImagesClient) Update(ctx context.Context, input *UpdateImageInput) (*Im
 		Body:   input,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update image")
 	}
+	defer respReader.Close()
 
 	var result *Image
 	decoder := json.NewDecoder(respReader)

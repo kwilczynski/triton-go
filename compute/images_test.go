@@ -25,9 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	fakeImageID = "2b683a82-a066-11e3-97ab-2faa44701c5a"
-)
+const fakeImageID = "2b683a82-a066-11e3-97ab-2faa44701c5a"
 
 func TestAccImagesList(t *testing.T) {
 	const stateKey = "images"
@@ -58,7 +56,7 @@ func TestAccImagesList(t *testing.T) {
 				AssertFunc: func(state testutils.TritonStateBag) error {
 					images, ok := state.GetOk(stateKey)
 					if !ok {
-						return fmt.Errorf("State key %q not found", stateKey)
+						return fmt.Errorf("state key %q not found", stateKey)
 					}
 
 					toFind := []string{image1Id, image2Id}
@@ -71,7 +69,7 @@ func TestAccImagesList(t *testing.T) {
 							}
 						}
 						if !found {
-							return fmt.Errorf("Did not find Image %q", imageID)
+							return fmt.Errorf("could not find image %q", imageID)
 						}
 					}
 
@@ -134,7 +132,7 @@ func TestAccImagesListInput(t *testing.T) {
 				AssertFunc: func(state testutils.TritonStateBag) error {
 					images, ok := state.GetOk(stateKey)
 					if !ok {
-						return fmt.Errorf("State key %q not found", stateKey)
+						return fmt.Errorf("state key %q not found", stateKey)
 					}
 
 					toFind := []string{image1Id}
@@ -147,7 +145,7 @@ func TestAccImagesListInput(t *testing.T) {
 							}
 						}
 						if !found {
-							return fmt.Errorf("Did not find Image %q", imageID)
+							return fmt.Errorf("could not find image %q", imageID)
 						}
 					}
 
@@ -171,6 +169,7 @@ func TestAccImagesListInput(t *testing.T) {
 func TestAccImagesGet(t *testing.T) {
 	const stateKey = "image"
 	const imageId = "95f6c9a6-a2bd-11e2-b753-dbf2651bf890"
+
 	publishedAt, err := time.Parse(time.RFC3339, "2013-04-11T21:05:28Z")
 	if err != nil {
 		t.Fatal("Reference time does not parse as RFC3339")
@@ -251,7 +250,7 @@ func TestDeleteImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to delete image") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal testError: found %v", err)
 		}
 	})
 }
@@ -293,7 +292,7 @@ func TestGetImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, found %v", err)
 		}
 	})
 
@@ -306,7 +305,7 @@ func TestGetImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, found %v", err)
 		}
 	})
 
@@ -322,7 +321,7 @@ func TestGetImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to get image") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal testError, found %v", err)
 		}
 	})
 }
@@ -349,7 +348,7 @@ func TestListImages(t *testing.T) {
 		}
 
 		if resp == nil {
-			t.Fatalf("Expected an output but got nil")
+			t.Fatalf("expected an output but got nil")
 		}
 	})
 
@@ -362,7 +361,7 @@ func TestListImages(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, found %v", err)
 		}
 	})
 
@@ -375,7 +374,7 @@ func TestListImages(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, found %v", err)
 		}
 	})
 
@@ -391,7 +390,7 @@ func TestListImages(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to list images") {
-			t.Errorf("expected error to equal testError: found %v", err)
+			t.Errorf("expected error to equal testError, found %v", err)
 		}
 	})
 }
@@ -431,7 +430,7 @@ func TestCreateImageFromMachine(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to create image from machine") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal testError, found %v", err)
 		}
 	})
 }
@@ -471,7 +470,7 @@ func TestUpdateImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to update image") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal testError, found %v", err)
 		}
 	})
 }
@@ -511,7 +510,7 @@ func TestExportImage(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to export image") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal testError, found %v", err)
 		}
 	})
 }
@@ -523,6 +522,7 @@ func deleteImageSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -543,23 +543,22 @@ func getImageSuccess(req *http.Request) (*http.Response, error) {
   "type": "zone-dataset",
   "description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
   "files": [
-	{
-	  "compression": "gzip",
-	  "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
-	  "size": 110742036
-	}
+    {
+      "compression": "gzip",
+      "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
+      "size": 110742036
+    }
   ],
   "tags": {
-	"role": "os",
-	"group": "base-32"
+    "role": "os",
+    "group": "base-32"
   },
   "homepage": "https://docs.joyent.com/images/smartos/base",
   "published_at": "2014-02-28T10:50:42Z",
   "owner": "930896af-bf8c-48d4-885c-6573a94b1853",
   "public": true,
   "state": "active"
-}
-`)
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -581,15 +580,15 @@ func getImageBadDecode(req *http.Request) (*http.Response, error) {
   "type": "zone-dataset",
   "description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
   "files": [
-	{
-	  "compression": "gzip",
-	  "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
-	  "size": 110742036
-	}
+    {
+      "compression": "gzip",
+      "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
+      "size": 110742036
+    }
   ],
   "tags": {
-	"role": "os",
-	"group": "base-32"
+    "role": "os",
+    "group": "base-32"
   },
   "homepage": "https://docs.joyent.com/images/smartos/base",
   "published_at": "2014-02-28T10:50:42Z",
@@ -612,7 +611,7 @@ func getImageEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -624,33 +623,31 @@ func listImagesSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-{
-	"id": "2b683a82-a066-11e3-97ab-2faa44701c5a",
-	"name": "base",
-	"version": "13.4.0",
-	"os": "smartos",
-	"requirements": {},
-	"type": "zone-dataset",
-	"description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
-	"files": [
-	  {
-		"compression": "gzip",
-		"sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
-		"size": 110742036
-	  }
-	],
-	"tags": {
-	  "role": "os",
-	  "group": "base-32"
-	},
-	"homepage": "https://docs.joyent.com/images/smartos/base",
-	"published_at": "2014-02-28T10:50:42Z",
-	"owner": "930896af-bf8c-48d4-885c-6573a94b1853",
-	"public": true,
-	"state": "active"
-  }
-]`)
+	body := strings.NewReader(`[{
+  "id": "2b683a82-a066-11e3-97ab-2faa44701c5a",
+  "name": "base",
+  "version": "13.4.0",
+  "os": "smartos",
+  "requirements": {},
+  "type": "zone-dataset",
+  "description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
+  "files": [
+    {
+      "compression": "gzip",
+      "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
+      "size": 110742036
+    }
+  ],
+  "tags": {
+    "role": "os",
+    "group": "base-32"
+  },
+  "homepage": "https://docs.joyent.com/images/smartos/base",
+  "published_at": "2014-02-28T10:50:42Z",
+  "owner": "930896af-bf8c-48d4-885c-6573a94b1853",
+  "public": true,
+  "state": "active"
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -666,7 +663,7 @@ func listImagesEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -675,30 +672,30 @@ func listImagesBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-	"id": "2b683a82-a066-11e3-97ab-2faa44701c5a",
-	"name": "base",
-	"version": "13.4.0",
-	"os": "smartos",
-	"requirements": {},
-	"type": "zone-dataset",
-	"description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
-	"files": [
-	  {
-		"compression": "gzip",
-		"sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
-		"size": 110742036
-	  }
-	],
-	"tags": {
-	  "role": "os",
-	  "group": "base-32"
-	},
-	"homepage": "https://docs.joyent.com/images/smartos/base",
-	"published_at": "2014-02-28T10:50:42Z",
-	"owner": "930896af-bf8c-48d4-885c-6573a94b1853",
-	"public": true,
-	"state": "active",
-  }]`)
+  "id": "2b683a82-a066-11e3-97ab-2faa44701c5a",
+  "name": "base",
+  "version": "13.4.0",
+  "os": "smartos",
+  "requirements": {},
+  "type": "zone-dataset",
+  "description": "A 32-bit SmartOS image with just essential packages installed. Ideal for users who are comfortable with setting up their own environment and tools.",
+  "files": [
+    {
+      "compression": "gzip",
+      "sha1": "3bebb6ae2cdb26eef20cfb30fdc4a00a059a0b7b",
+      "size": 110742036
+    }
+  ],
+  "tags": {
+    "role": "os",
+    "group": "base-32"
+  },
+  "homepage": "https://docs.joyent.com/images/smartos/base",
+  "published_at": "2014-02-28T10:50:42Z",
+  "owner": "930896af-bf8c-48d4-885c-6573a94b1853",
+  "public": true,
+  "state": "active",
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -716,15 +713,14 @@ func createImageFromMachineSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"id": "62306cd7-7b8a-c5dd-d44e-8491c83b9974",
-	"name": "my-custom-image",
-	"version": "1.2.3",
-	"requirements": {},
-	"owner": "47034e57-42d1-0342-b302-00db733e8c8a",
-	"public": false,
-	"state": "active"
-}
-`)
+  "id": "62306cd7-7b8a-c5dd-d44e-8491c83b9974",
+  "name": "my-custom-image",
+  "version": "1.2.3",
+  "requirements": {},
+  "owner": "47034e57-42d1-0342-b302-00db733e8c8a",
+  "public": false,
+  "state": "active"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusCreated,
@@ -752,8 +748,7 @@ func updateImageSuccess(req *http.Request) (*http.Response, error) {
   "owner": "47034e57-42d1-0342-b302-00db733e8c8a",
   "public": true,
   "state": "active"
-}
-`)
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -774,8 +769,7 @@ func exportImageSuccess(req *http.Request) (*http.Response, error) {
   "manta_url": "https://us-east.manta.joyent.com",
   "image_path": "/user/stor/my-image.zfs.gz",
   "manifest_path": "/user/stor/my-image.imgmanifest"
-}
-`)
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,

@@ -25,7 +25,7 @@ import (
 	"github.com/joyent/triton-go/testutils"
 )
 
-var (
+const (
 	fakePackageId   = "7b17343c-94af-6266-e0e8-893a3b9993d0"
 	fakePackageName = "g4-test"
 )
@@ -282,22 +282,20 @@ func listPackagesFiltered(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-	"id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
-	"name": "g4-test",
-	"memory": 1024,
-	"disk": 25600,
-	"swap": 4096,
-	"vcpus": 0,
-	"lwps": 4000,
-	"default": false,
-	"version": "1.0.0"
-  }]
-`)
+	body := strings.NewReader(`[{
+  "id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
+  "name": "g4-test",
+  "memory": 1024,
+  "disk": 25600,
+  "swap": 4096,
+  "vcpus": 0,
+  "lwps": 4000,
+  "default": false,
+  "version": "1.0.0"
+}]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -307,22 +305,20 @@ func listPackagesSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-	"id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
-	"name": "sdc_128",
-	"memory": 128,
-	"disk": 12288,
-	"swap": 256,
-	"vcpus": 1,
-	"lwps": 1000,
-	"default": false,
-	"version": "1.0.0"
-  }]
-`)
+	body := strings.NewReader(`[{
+  "id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
+  "name": "sdc_128",
+  "memory": 128,
+  "disk": 12288,
+  "swap": 256,
+  "vcpus": 1,
+  "lwps": 1000,
+  "default": false,
+  "version": "1.0.0"
+}]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -333,9 +329,9 @@ func listPackagesEmpty(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -344,19 +340,19 @@ func listPackagesBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-	"id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
-	"name": "sdc_128",
-	"memory": 128,
-	"disk": 12288,
-	"swap": 256,
-	"vcpus": 1,
-	"lwps": 1000,
-	"default": false,
-	"version": "1.0.0",
-  }]`)
+  "id": "7b17343c-94af-6266-e0e8-893a3b9993d0",
+  "name": "sdc_128",
+  "memory": 128,
+  "disk": 12288,
+  "swap": 256,
+  "vcpus": 1,
+  "lwps": 1000,
+  "default": false,
+  "version": "1.0.0",
+}]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -380,11 +376,10 @@ func getPackageSuccess(req *http.Request) (*http.Response, error) {
   "lwps": 1000,
   "default": false,
   "version": "1.0.0"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -407,7 +402,7 @@ func getPackageBadDecode(req *http.Request) (*http.Response, error) {
 }`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -418,9 +413,9 @@ func getPackageEmpty(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 

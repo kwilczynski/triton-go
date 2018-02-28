@@ -23,6 +23,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var listServicesErrorType = errors.New("unable to list services")
+
 func TestAccServicesList(t *testing.T) {
 	const stateKey = "services"
 
@@ -50,7 +52,7 @@ func TestAccServicesList(t *testing.T) {
 				AssertFunc: func(state testutils.TritonStateBag) error {
 					services, ok := state.GetOk(stateKey)
 					if !ok {
-						return fmt.Errorf("State key %q not found", stateKey)
+						return fmt.Errorf("state key %q not found", stateKey)
 					}
 
 					toFind := []string{"docker"}
@@ -60,12 +62,12 @@ func TestAccServicesList(t *testing.T) {
 							if service.Name == serviceName {
 								found = true
 								if service.Endpoint == "" {
-									return fmt.Errorf("%q has no Endpoint", service.Name)
+									return fmt.Errorf("%q has no endpoint", service.Name)
 								}
 							}
 						}
 						if !found {
-							return fmt.Errorf("Did not find Service %q", serviceName)
+							return fmt.Errorf("could not find service %q", serviceName)
 						}
 					}
 
@@ -94,11 +96,11 @@ func TestListServices(t *testing.T) {
 
 		resp, err := do(context.Background(), computeClient)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("expected no error, got %v", err)
 		}
 
 		if resp == nil {
-			t.Fatalf("Expected an output but got nil")
+			t.Fatal("expected response, got nil")
 		}
 	})
 
@@ -107,11 +109,11 @@ func TestListServices(t *testing.T) {
 
 		_, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, got %v", err)
 		}
 	})
 
@@ -120,11 +122,11 @@ func TestListServices(t *testing.T) {
 
 		_, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, got %v", err)
 		}
 	})
 
@@ -133,14 +135,14 @@ func TestListServices(t *testing.T) {
 
 		resp, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
 		if resp != nil {
-			t.Error("expected resp to be nil")
+			t.Errorf("expected no response, got %v", resp)
 		}
 
 		if !strings.Contains(err.Error(), "unable to list services") {
-			t.Errorf("expected error to equal testError: found %v", err)
+			t.Errorf("expected error to equal test error, got %v", err)
 		}
 	})
 }
@@ -149,16 +151,14 @@ func listServicesSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`
-	{
+	body := strings.NewReader(`{
   "cloudapi": "https://us-west-1.api.example.com",
   "docker": "tcp://us-west-1.docker.example.com",
   "manta": "https://us-west.manta.example.com"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -169,9 +169,9 @@ func listServicesEmpty(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -186,12 +186,12 @@ func listServicesBadDecode(req *http.Request) (*http.Response, error) {
 }]`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
 }
 
 func listServicesError(req *http.Request) (*http.Response, error) {
-	return nil, errors.New("unable to list services")
+	return nil, listServicesErrorType
 }

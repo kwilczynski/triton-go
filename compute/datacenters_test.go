@@ -24,14 +24,16 @@ import (
 	"github.com/joyent/triton-go/testutils"
 )
 
-const dataCenterName = "us-east-1"
+const (
+	dataCenterName = "us-east-1"
+	dataCenterURL  = "https://us-east-1.api.joyentcloud.com"
+)
+
+var getDataCenterErrorType = errors.New(`datacenter "not-a-real-dc-name" not found`)
 
 // Note that this is specific to Joyent Public Cloud and will not pass on
 // private installations of Triton.
 func TestAccDataCenters_Get(t *testing.T) {
-	const dataCenterName = "us-east-1"
-	const dataCenterURL = "https://us-east-1.api.joyentcloud.com"
-
 	testutils.AccTest(t, testutils.TestCase{
 		Steps: []testutils.Step{
 
@@ -68,18 +70,20 @@ func TestAccDataCenters_Get(t *testing.T) {
 // Note that this is specific to Joyent Public Cloud and will not pass on
 // private installations of Triton.
 func TestAccDataCenters_List(t *testing.T) {
+	const stateKey = "datacenters"
+
 	testutils.AccTest(t, testutils.TestCase{
 		Steps: []testutils.Step{
 
 			&testutils.StepClient{
-				StateBagKey: "datacenter",
+				StateBagKey: stateKey,
 				CallFunc: func(config *triton.ClientConfig) (interface{}, error) {
 					return compute.NewClient(config)
 				},
 			},
 
 			&testutils.StepAPICall{
-				StateBagKey: "datacenters",
+				StateBagKey: stateKey,
 				CallFunc: func(client interface{}) (interface{}, error) {
 					c := client.(*compute.ComputeClient)
 					ctx := context.Background()
@@ -90,9 +94,9 @@ func TestAccDataCenters_List(t *testing.T) {
 
 			&testutils.StepAssertFunc{
 				AssertFunc: func(state testutils.TritonStateBag) error {
-					dcs, ok := state.GetOk("datacenters")
+					dcs, ok := state.GetOk(stateKey)
 					if !ok {
-						return fmt.Errorf("State key %q not found", "datacenters")
+						return fmt.Errorf("state key %q not found", stateKey)
 					}
 
 					toFind := []string{"us-east-1", "eu-ams-1"}
@@ -107,7 +111,7 @@ func TestAccDataCenters_List(t *testing.T) {
 							}
 						}
 						if !found {
-							return fmt.Errorf("Did not find DC %q", dcName)
+							return fmt.Errorf("could not find datacenter %q", dcName)
 						}
 					}
 
@@ -154,7 +158,7 @@ func TestListDataCenters(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF: found %v", err)
 		}
 	})
 
@@ -167,7 +171,7 @@ func TestListDataCenters(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail: found %v", err)
 		}
 	})
 
@@ -214,11 +218,11 @@ func TestGetDataCenter(t *testing.T) {
 		}
 
 		if resp == nil {
-			t.Fatalf("Expected an output but got nil")
+			t.Fatalf("expected an output but got nil")
 		}
 
 		if resp.URL != "https://us-east-1.api.joyentcloud.com" {
-			t.Fatal("Expected URL to be `https://us-east-1.api.joyentcloud.com` but got `https://us-east-1.api.joyentcloud.com`", resp.URL)
+			t.Fatalf(`expected URL to be "https://us-east-1.api.joyentcloud.com", but got %q`, resp.URL)
 		}
 	})
 
@@ -233,8 +237,8 @@ func TestGetDataCenter(t *testing.T) {
 			t.Error("expected resp to be nil")
 		}
 
-		if !strings.Contains(err.Error(), fmt.Sprintf("datacenter 'not-a-real-dc-name' not found")) {
-			t.Errorf("expected error to equal testError: found %s", err)
+		if !strings.Contains(err.Error(), `datacenter "not-a-real-dc-name" not found`) {
+			t.Errorf("expected error to equal testError: found %v", err)
 		}
 	})
 }
@@ -244,14 +248,13 @@ func listDataCentersSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"us-east-1": "https://us-east-1.api.joyentcloud.com",
-	"us-west-1": "https://us-west-1.api.joyentcloud.com",
-	"us-sw-1": "https://us-sw-1.api.joyentcloud.com",
-	"eu-ams-1": "https://eu-ams-1.api.joyentcloud.com",
-	"us-east-2": "https://us-east-2.api.joyentcloud.com",
-	"us-east-3": "https://us-east-3.api.joyentcloud.com"
-}
-`)
+  "us-east-1": "https://us-east-1.api.joyentcloud.com",
+  "us-west-1": "https://us-west-1.api.joyentcloud.com",
+  "us-sw-1": "https://us-sw-1.api.joyentcloud.com",
+  "eu-ams-1": "https://eu-ams-1.api.joyentcloud.com",
+  "us-east-2": "https://us-east-2.api.joyentcloud.com",
+  "us-east-3": "https://us-east-3.api.joyentcloud.com"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -267,7 +270,7 @@ func listDataCentersEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -276,12 +279,12 @@ func listDataCentersBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"us-east-1": "https://us-east-1.api.joyentcloud.com",
-	"us-west-1": "https://us-west-1.api.joyentcloud.com",
-	"us-sw-1": "https://us-sw-1.api.joyentcloud.com",
-	"eu-ams-1": "https://eu-ams-1.api.joyentcloud.com",
-	"us-east-2": "https://us-east-2.api.joyentcloud.com",
-	"us-east-3": "https://us-east-3.api.joyentcloud.com",
+  "us-east-1": "https://us-east-1.api.joyentcloud.com",
+  "us-west-1": "https://us-west-1.api.joyentcloud.com",
+  "us-sw-1": "https://us-sw-1.api.joyentcloud.com",
+  "eu-ams-1": "https://eu-ams-1.api.joyentcloud.com",
+  "us-east-2": "https://us-east-2.api.joyentcloud.com",
+  "us-east-3": "https://us-east-3.api.joyentcloud.com",
 }`)
 
 	return &http.Response{
@@ -300,9 +303,8 @@ func getDataCenterSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"us-east-1": "https://us-east-1.api.joyentcloud.com"
-}
-`)
+  "us-east-1": "https://us-east-1.api.joyentcloud.com"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -312,5 +314,5 @@ func getDataCenterSuccess(req *http.Request) (*http.Response, error) {
 }
 
 func getDataCenterError(req *http.Request) (*http.Response, error) {
-	return nil, errors.New("datacenter 'not-a-real-dc-name' not found")
+	return nil, getDataCenterErrorType
 }

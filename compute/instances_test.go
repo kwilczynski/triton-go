@@ -31,7 +31,7 @@ import (
 	"github.com/joyent/triton-go/testutils"
 )
 
-var (
+const (
 	fakeMachineID         = "75cfe125-a5ce-49e8-82ac-09aa31ffdf26"
 	fakeMachinePackageID  = "7041ccc7-3f9e-cf1e-8c85-a9ee41b7f968"
 	fakeMachineTag        = "my-test-tag"
@@ -1679,7 +1679,7 @@ func TestCountInstances(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !strings.Contains(err.Error(), "unable to get machines count") {
+		if !strings.Contains(err.Error(), "unable to count machines") {
 			t.Errorf("expected error to equal testError: found %s", err)
 		}
 	})
@@ -1765,27 +1765,26 @@ func getMachineSuccess(req *http.Request) (*http.Response, error) {
   "state": "running",
   "image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
   "ips": [
-	"10.88.88.26",
-	"192.168.128.5"
+    "10.88.88.26",
+    "192.168.128.5"
   ],
   "memory": 128,
   "disk": 12288,
   "metadata": {
-	"root_authorized_keys": "..."
+    "root_authorized_keys": "..."
   },
   "tags": {},
   "created": "2016-01-04T12:55:50.539Z",
   "updated": "2016-01-21T08:56:59.000Z",
   "networks": [
-	"a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
-	"45607081-4cd2-45c8-baf7-79da760fffaa"
+    "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
+    "45607081-4cd2-45c8-baf7-79da760fffaa"
   ],
   "primaryIp": "10.88.88.26",
   "firewall_enabled": false,
   "compute_node": "564d0b8e-6099-7648-351e-877faf6c56f6",
   "package": "sdc_128"
-}
-`)
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -1806,20 +1805,20 @@ func getMachineBadDecode(req *http.Request) (*http.Response, error) {
   "state": "running",
   "image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
   "ips": [
-	"10.88.88.26",
-	"192.168.128.5"
+    "10.88.88.26",
+    "192.168.128.5"
   ],
   "memory": 128,
   "disk": 12288,
   "metadata": {
-	"root_authorized_keys": "...",
+    "root_authorized_keys": "...",
   },
   "tags": {},
   "created": "2016-01-04T12:55:50.539Z",
   "updated": "2016-01-21T08:56:59.000Z",
   "networks": [
-	"a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
-	"45607081-4cd2-45c8-baf7-79da760fffaa"
+    "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
+    "45607081-4cd2-45c8-baf7-79da760fffaa"
   ],
   "primaryIp": "10.88.88.26",
   "firewall_enabled": false,
@@ -1841,7 +1840,7 @@ func getMachineEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -1853,36 +1852,34 @@ func listMachinesSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-	"id": "b6979942-7d5d-4fe6-a2ec-b812e950625a",
-	"name": "test",
-	"type": "smartmachine",
-	"brand": "joyent",
-	"state": "running",
-	"image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
-	"ips": [
-	  "10.88.88.26",
-	  "192.168.128.5"
-	],
-	"memory": 128,
-	"disk": 12288,
-	"metadata": {
-	  "root_authorized_keys": "..."
-	},
-	"tags": {},
-	"created": "2016-01-04T12:55:50.539Z",
-	"updated": "2016-01-21T08:56:59.000Z",
-	"networks": [
-	  "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
-	  "45607081-4cd2-45c8-baf7-79da760fffaa"
-	],
-	"primaryIp": "10.88.88.26",
-	"firewall_enabled": false,
-	"compute_node": "564d0b8e-6099-7648-351e-877faf6c56f6",
-	"package": "sdc_128"
-  }
-]`)
+	body := strings.NewReader(`[{
+  "id": "b6979942-7d5d-4fe6-a2ec-b812e950625a",
+  "name": "test",
+  "type": "smartmachine",
+  "brand": "joyent",
+  "state": "running",
+  "image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
+  "ips": [
+    "10.88.88.26",
+    "192.168.128.5"
+  ],
+  "memory": 128,
+  "disk": 12288,
+  "metadata": {
+    "root_authorized_keys": "..."
+  },
+  "tags": {},
+  "created": "2016-01-04T12:55:50.539Z",
+  "updated": "2016-01-21T08:56:59.000Z",
+  "networks": [
+    "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
+    "45607081-4cd2-45c8-baf7-79da760fffaa"
+  ],
+  "primaryIp": "10.88.88.26",
+  "firewall_enabled": false,
+  "compute_node": "564d0b8e-6099-7648-351e-877faf6c56f6",
+  "package": "sdc_128"
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -1898,7 +1895,7 @@ func listMachinesEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -1907,33 +1904,33 @@ func listMachinesBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-	"id": "b6979942-7d5d-4fe6-a2ec-b812e950625a",
-	"name": "test",
-	"type": "smartmachine",
-	"brand": "joyent",
-	"state": "running",
-	"image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
-	"ips": [
-	  "10.88.88.26",
-	  "192.168.128.5"
-	],
-	"memory": 128,
-	"disk": 12288,
-	"metadata": {
-	  "root_authorized_keys": "..."
-	},
-	"tags": {},
-	"created": "2016-01-04T12:55:50.539Z",
-	"updated": "2016-01-21T08:56:59.000Z",
-	"networks": [
-	  "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
-	  "45607081-4cd2-45c8-baf7-79da760fffaa"
-	],
-	"primaryIp": "10.88.88.26",
-	"firewall_enabled": false,
-	"compute_node": "564d0b8e-6099-7648-351e-877faf6c56f6",
-	"package": "sdc_128",
-  }]`)
+  "id": "b6979942-7d5d-4fe6-a2ec-b812e950625a",
+  "name": "test",
+  "type": "smartmachine",
+  "brand": "joyent",
+  "state": "running",
+  "image": "2b683a82-a066-11e3-97ab-2faa44701c5a",
+  "ips": [
+    "10.88.88.26",
+    "192.168.128.5"
+  ],
+  "memory": 128,
+  "disk": 12288,
+  "metadata": {
+    "root_authorized_keys": "..."
+  },
+  "tags": {},
+  "created": "2016-01-04T12:55:50.539Z",
+  "updated": "2016-01-21T08:56:59.000Z",
+  "networks": [
+    "a9c130da-e3ba-40e9-8b18-112aba2d3ba7",
+    "45607081-4cd2-45c8-baf7-79da760fffaa"
+  ],
+  "primaryIp": "10.88.88.26",
+  "firewall_enabled": false,
+  "compute_node": "564d0b8e-6099-7648-351e-877faf6c56f6",
+  "package": "sdc_128",
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -1953,6 +1950,7 @@ func deleteMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -1967,6 +1965,7 @@ func renameMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -1981,6 +1980,7 @@ func rebootMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -1995,6 +1995,7 @@ func startMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2009,6 +2010,7 @@ func stopMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2023,6 +2025,7 @@ func resizeMachineSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2037,6 +2040,7 @@ func enableMachineFirewallSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2051,6 +2055,7 @@ func disableMachineFirewallSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2065,6 +2070,7 @@ func deleteMachineTagsSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2079,6 +2085,7 @@ func deleteMachineTagSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2090,7 +2097,8 @@ func getMachineTagSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`"bar"
+	body := strings.NewReader(`
+  "bar"
 `)
 
 	return &http.Response{
@@ -2108,7 +2116,10 @@ func listMachineTagSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`{"foo":"bar","group":"test"}`)
+	body := strings.NewReader(`{
+  "foo": "bar",
+  "group": "test"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2125,7 +2136,8 @@ func getMachineMetaDataSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`"bar"
+	body := strings.NewReader(`
+  "bar"
 `)
 
 	return &http.Response{
@@ -2143,7 +2155,10 @@ func listMachineMetaDataSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`{"foo":"bar","group":"test"}`)
+	body := strings.NewReader(`{
+  "foo": "bar",
+  "group": "test"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2163,6 +2178,7 @@ func deleteMachineMetaDataSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2177,6 +2193,7 @@ func deleteAllMachineMetaDataSuccess(req *http.Request) (*http.Response, error) 
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2188,17 +2205,15 @@ func listMachineNICsSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-		"mac": "90:b8:d0:2f:b8:f9",
-		"primary": true,
-		"ip": "10.88.88.137",
-		"netmask": "255.255.255.0",
-		"gateway": "10.88.88.2",
-		"state": "running",
-		"network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35"
-	}
-]`)
+	body := strings.NewReader(`[{
+  "mac": "90:b8:d0:2f:b8:f9",
+  "primary": true,
+  "ip": "10.88.88.137",
+  "netmask": "255.255.255.0",
+  "gateway": "10.88.88.2",
+  "state": "running",
+  "network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35"
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2214,7 +2229,7 @@ func listMachineNICsEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2223,14 +2238,14 @@ func listMachineNICsBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-		"mac": "90:b8:d0:2f:b8:f9",
-		"primary": true,
-		"ip": "10.88.88.137",
-		"netmask": "255.255.255.0",
-		"gateway": "10.88.88.2",
-		"state": "running",
-		"network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35",
-	}]`)
+  "mac": "90:b8:d0:2f:b8:f9",
+  "primary": true,
+  "ip": "10.88.88.137",
+  "netmask": "255.255.255.0",
+  "gateway": "10.88.88.2",
+  "state": "running",
+  "network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35",
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2248,15 +2263,14 @@ func getMachineNICSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-		"mac": "90:b8:d0:2f:b8:f9",
-		"primary": true,
-		"ip": "10.88.88.137",
-		"netmask": "255.255.255.0",
-		"gateway": "10.88.88.2",
-		"state": "running",
-		"network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35"
-	}
-`)
+  "mac": "90:b8:d0:2f:b8:f9",
+  "primary": true,
+  "ip": "10.88.88.137",
+  "netmask": "255.255.255.0",
+  "gateway": "10.88.88.2",
+  "state": "running",
+  "network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2270,14 +2284,14 @@ func getMachineNICBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-		"mac": "90:b8:d0:2f:b8:f9",
-		"primary": true,
-		"ip": "10.88.88.137",
-		"netmask": "255.255.255.0",
-		"gateway": "10.88.88.2",
-		"state": "running",
-		"network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35",
-	}`)
+  "mac": "90:b8:d0:2f:b8:f9",
+  "primary": true,
+  "ip": "10.88.88.137",
+  "netmask": "255.255.255.0",
+  "gateway": "10.88.88.2",
+  "state": "running",
+  "network": "6b3229b6-c535-11e5-8cf9-c3a24fa96e35",
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -2293,7 +2307,7 @@ func getMachineNICEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2308,6 +2322,7 @@ func deleteMachineNICSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2320,12 +2335,11 @@ func createMachineNICSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"network": "7007b198-f6aa-48f0-9843-78a3149de3d7"
-}
-`)
+  "network": "7007b198-f6aa-48f0-9843-78a3149de3d7"
+}`)
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -2350,7 +2364,7 @@ func createMachineSuccess(req *http.Request) (*http.Response, error) {
   "memory": 128,
   "disk": 12288,
   "metadata": {
-	"root_authorized_keys": "..."
+    "root_authorized_keys": "..."
   },
   "tags": {},
   "created": "2016-01-21T12:57:52.759Z",
@@ -2359,11 +2373,10 @@ func createMachineSuccess(req *http.Request) (*http.Response, error) {
   "firewall_enabled": false,
   "compute_node": null,
   "package": "sdc_128"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -2381,7 +2394,7 @@ func countMachinesSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2396,6 +2409,7 @@ func replaceMachineTagsSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2410,6 +2424,7 @@ func addMachineTagsSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2424,11 +2439,10 @@ func updateMachineMetaDataSuccess(req *http.Request) (*http.Response, error) {
 	body := strings.NewReader(`{
   "foo": "bar",
   "group": "test"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -2445,6 +2459,7 @@ func enableDeletionProtectionSuccess(req *http.Request) (*http.Response, error) 
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -2459,6 +2474,7 @@ func disableDeletionProtectionSuccess(req *http.Request) (*http.Response, error)
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 

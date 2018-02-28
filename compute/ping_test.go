@@ -44,15 +44,15 @@ func TestPing(t *testing.T) {
 
 		resp, err := do(context.Background(), computeClient)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("expected no error, got %v", err)
 		}
 
 		if resp.Ping != "pong" {
-			t.Errorf("ping was not pong: expected %s", resp.Ping)
+			t.Errorf(`expected response to be "pong", got %s`, resp.Ping)
 		}
 
 		if !reflect.DeepEqual(resp.CloudAPI.Versions, mockVersions) {
-			t.Errorf("ping did not contain CloudAPI versions: expected %s", mockVersions)
+			t.Errorf("expected response to contain CloudAPI versions, got %v", resp.CloudAPI.Versions)
 		}
 	})
 
@@ -61,27 +61,27 @@ func TestPing(t *testing.T) {
 
 		_, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, got %v", err)
 		}
 	})
 
 	t.Run("error", func(t *testing.T) {
 		testutils.RegisterResponder("GET", "/--ping", pingErrorFunc)
 
-		out, err := do(context.Background(), computeClient)
+		resp, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
-		if out != nil {
-			t.Error("expected pingOut to be nil")
+		if resp != nil {
+			t.Errorf("expected no response, got %v", resp)
 		}
 
 		if !strings.Contains(err.Error(), "unable to ping") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal test error, got %v", err)
 		}
 	})
 
@@ -90,11 +90,11 @@ func TestPing(t *testing.T) {
 
 		_, err := do(context.Background(), computeClient)
 		if err == nil {
-			t.Fatal(err)
+			t.Fatal("expected an error, got nil")
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, got %v", err)
 		}
 	})
 }
@@ -104,14 +104,14 @@ func pingSuccessFunc(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"ping": "pong",
-	"cloudapi": {
-		"versions": ["7.0.0", "7.1.0", "7.2.0", "7.3.0", "8.0.0"]
-	}
+  "ping": "pong",
+  "cloudapi": {
+    "versions": ["7.0.0", "7.1.0", "7.2.0", "7.3.0", "8.0.0"]
+  }
 }`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -122,9 +122,9 @@ func pingEmptyFunc(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -141,7 +141,7 @@ func pingDecodeFunc(req *http.Request) (*http.Response, error) {
 }`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil

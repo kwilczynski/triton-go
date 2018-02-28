@@ -277,17 +277,18 @@ func getVolumeSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "my-test-volume-1-updated",
-	"owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
-	"size": 10240,
-	"type": "tritonnfs",
-	"create_timestamp": "2018-01-12T21:17:35.909Z",
-	"state": "ready",
-	"networks": ["d251d640-a02e-47b5-8ae6-8b45d859528e"],
-	"filesystem_path": "192.168.128.9:/exports/data",
-	"id": "1fd4ecb9-7f66-cf31-9a8a-b661d3adebcf"
-}
-`)
+  "name": "my-test-volume-1-updated",
+  "owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
+  "size": 10240,
+  "type": "tritonnfs",
+  "create_timestamp": "2018-01-12T21:17:35.909Z",
+  "state": "ready",
+  "networks": [
+    "d251d640-a02e-47b5-8ae6-8b45d859528e"
+  ],
+  "filesystem_path": "192.168.128.9:/exports/data",
+  "id": "1fd4ecb9-7f66-cf31-9a8a-b661d3adebcf"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -301,15 +302,17 @@ func getVolumeBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "my-test-volume-1-updated",
-	"owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
-	"size": 10240,
-	"type": "tritonnfs",
-	"create_timestamp": "2018-01-12T21:17:35.909Z",
-	"state": "ready",
-	"networks": ["d251d640-a02e-47b5-8ae6-8b45d859528e"],
-	"filesystem_path": "192.168.128.9:/exports/data",
-	"id": "1fd4ecb9-7f66-cf31-9a8a-b661d3adebcf",
+  "name": "my-test-volume-1-updated",
+  "owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
+  "size": 10240,
+  "type": "tritonnfs",
+  "create_timestamp": "2018-01-12T21:17:35.909Z",
+  "state": "ready",
+  "networks": [
+    "d251d640-a02e-47b5-8ae6-8b45d859528e"
+  ],
+  "filesystem_path": "192.168.128.9:/exports/data",
+  "id": "1fd4ecb9-7f66-cf31-9a8a-b661d3adebcf",
 }`)
 
 	return &http.Response{
@@ -326,7 +329,7 @@ func getVolumeEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -341,6 +344,7 @@ func deleteVolumeSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -353,16 +357,17 @@ func createVolumeSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-	"name": "my-test-volume-1",
-	"owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
-	"size": 10240,
-	"type": "tritonnfs",
-	"create_timestamp": "2018-01-12T21:09:09.788Z",
-	"state": "creating",
-	"networks": ["d251d640-a02e-47b5-8ae6-8b45d859528e"],
-	"id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9"
-}
-`)
+  "name": "my-test-volume-1",
+  "owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
+  "size": 10240,
+  "type": "tritonnfs",
+  "create_timestamp": "2018-01-12T21:09:09.788Z",
+  "state": "creating",
+  "networks": [
+    "d251d640-a02e-47b5-8ae6-8b45d859528e"
+  ],
+  "id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9"
+}`)
 
 	return &http.Response{
 		StatusCode: http.StatusCreated,
@@ -382,6 +387,7 @@ func updateVolumeSuccess(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -393,18 +399,18 @@ func listVolumesSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-	"name": "my-test-volume-1",
-	"owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
-	"size": 10240,
-	"type": "tritonnfs",
-	"create_timestamp": "2018-01-12T21:09:09.788Z",
-	"state": "creating",
-	"networks": ["d251d640-a02e-47b5-8ae6-8b45d859528e"],
-	"id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9"
-}
-]`)
+	body := strings.NewReader(`[{
+  "name": "my-test-volume-1",
+  "owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
+  "size": 10240,
+  "type": "tritonnfs",
+  "create_timestamp": "2018-01-12T21:09:09.788Z",
+  "state": "creating",
+  "networks": [
+    "d251d640-a02e-47b5-8ae6-8b45d859528e"
+  ],
+  "id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9"
+}]`)
 
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -420,7 +426,7 @@ func listVolumesEmpty(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -429,14 +435,16 @@ func listVolumesBadDecode(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`[{
-	"name": "my-test-volume-1",
-	"owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
-	"size": 10240,
-	"type": "tritonnfs",
-	"create_timestamp": "2018-01-12T21:09:09.788Z",
-	"state": "creating",
-	"networks": ["d251d640-a02e-47b5-8ae6-8b45d859528e"],
-	"id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9",
+  "name": "my-test-volume-1",
+  "owner_uuid": "7530fb4f-aa7a-4f3c-ff9d-be6f2c510d14",
+  "size": 10240,
+  "type": "tritonnfs",
+  "create_timestamp": "2018-01-12T21:09:09.788Z",
+  "state": "creating",
+  "networks": [
+    "d251d640-a02e-47b5-8ae6-8b45d859528e"
+  ],
+  "id": "1edcc6ad-7987-4372-b13a-d21e678ba1e9",
 }]`)
 
 	return &http.Response{

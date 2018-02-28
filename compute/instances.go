@@ -118,20 +118,15 @@ func (c *InstancesClient) Count(ctx context.Context, input *ListInstancesInput) 
 
 	response, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
 	if err != nil {
-		return -1, pkgerrors.Wrap(err, "unable to get machines count")
-	}
-
-	if response == nil {
-		return -1, pkgerrors.New("request to get machines count has empty response")
+		return -1, pkgerrors.Wrap(err, "unable to count machines")
 	}
 	defer response.Body.Close()
 
 	var result int
-
 	if count := response.Header.Get("X-Resource-Count"); count != "" {
 		value, err := strconv.Atoi(count)
 		if err != nil {
-			return -1, pkgerrors.Wrap(err, "unable to decode machines count response")
+			return -1, pkgerrors.Wrap(err, "unable to decode count machines response")
 		}
 		result = value
 	}
@@ -150,20 +145,17 @@ func (c *InstancesClient) Get(ctx context.Context, input *GetInstanceInput) (*In
 		Path:   fullPath,
 	}
 	response, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
-	if response == nil {
+	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to get machine")
 	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
+	defer response.Body.Close()
+
 	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return nil, &errors.APIError{
 			StatusCode: response.StatusCode,
 			Code:       "ResourceNotFound",
+			Message:    fmt.Sprintf("machine %q could not be found", input.ID),
 		}
-	}
-	if err != nil {
-		return nil, pkgerrors.Wrap(err, "unable to get machine")
 	}
 
 	var result *_Instance
@@ -210,13 +202,13 @@ func buildQueryFilter(input *ListInstancesInput) *url.Values {
 		query.Set("state", input.State)
 	}
 	if input.Memory >= 1 {
-		query.Set("memory", fmt.Sprintf("%d", input.Memory))
+		query.Set("memory", strconv.Itoa(int(input.Memory)))
 	}
 	if input.Limit >= 1 && input.Limit <= 1000 {
-		query.Set("limit", fmt.Sprintf("%d", input.Limit))
+		query.Set("limit", strconv.Itoa(int(input.Limit)))
 	}
 	if input.Offset >= 0 {
-		query.Set("offset", fmt.Sprintf("%d", input.Offset))
+		query.Set("offset", strconv.Itoa(int(input.Offset)))
 	}
 	if input.Tombstone {
 		query.Set("tombstone", "true")
@@ -245,12 +237,10 @@ func (c *InstancesClient) List(ctx context.Context, input *ListInstancesInput) (
 		Query:  buildQueryFilter(input),
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to list machines")
 	}
+	defer respReader.Close()
 
 	var results []*_Instance
 	decoder := json.NewDecoder(respReader)
@@ -325,7 +315,7 @@ func (input *CreateInstanceInput) toAPI() (map[string]interface{}, error) {
 	hasAffinity := len(input.Affinity) > 0
 	hasLocality := len(input.LocalityNear) > 0 || len(input.LocalityFar) > 0
 	if hasAffinity && hasLocality {
-		return nil, fmt.Errorf("Cannot include both Affinity and Locality")
+		return nil, pkgerrors.New("cannot include both affinity and locality")
 	}
 
 	// affinity takes precedence over locality regardless
@@ -365,6 +355,7 @@ func (input *CreateInstanceInput) toAPI() (map[string]interface{}, error) {
 
 func (c *InstancesClient) Create(ctx context.Context, input *CreateInstanceInput) (*Instance, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines")
+
 	body, err := input.toAPI()
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to prepare for machine creation")
@@ -376,12 +367,10 @@ func (c *InstancesClient) Create(ctx context.Context, input *CreateInstanceInput
 		Body:   body,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to create machine")
 	}
+	defer respReader.Close()
 
 	var result *Instance
 	decoder := json.NewDecoder(respReader)
@@ -398,22 +387,19 @@ type DeleteInstanceInput struct {
 
 func (c *InstancesClient) Delete(ctx context.Context, input *DeleteInstanceInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
 	}
 	response, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
-	if response == nil {
-		return pkgerrors.Wrap(err, "unable to delete machine")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
-	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
-		return nil
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to decode delete machine response")
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
+		return nil
 	}
 
 	return nil
@@ -425,6 +411,7 @@ type DeleteTagsInput struct {
 
 func (c *InstancesClient) DeleteTags(ctx context.Context, input *DeleteTagsInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
@@ -433,13 +420,9 @@ func (c *InstancesClient) DeleteTags(ctx context.Context, input *DeleteTagsInput
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to delete tags from machine")
 	}
-	if response == nil {
-		return fmt.Errorf("DeleteTags request has empty response")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
-	if response.StatusCode == http.StatusNotFound {
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return nil
 	}
 
@@ -453,6 +436,7 @@ type DeleteTagInput struct {
 
 func (c *InstancesClient) DeleteTag(ctx context.Context, input *DeleteTagInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags", input.Key)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
@@ -461,13 +445,9 @@ func (c *InstancesClient) DeleteTag(ctx context.Context, input *DeleteTagInput) 
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to delete tag from machine")
 	}
-	if response == nil {
-		return fmt.Errorf("DeleteTag request has empty response")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
-	if response.StatusCode == http.StatusNotFound {
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return nil
 	}
 
@@ -492,12 +472,10 @@ func (c *InstancesClient) Rename(ctx context.Context, input *RenameInstanceInput
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to rename machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -521,18 +499,17 @@ func (input ReplaceTagsInput) toAPI() map[string]interface{} {
 
 func (c *InstancesClient) ReplaceTags(ctx context.Context, input *ReplaceTagsInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPut,
 		Path:   fullPath,
 		Body:   input.toAPI(),
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to replace machine tags")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -544,18 +521,17 @@ type AddTagsInput struct {
 
 func (c *InstancesClient) AddTags(ctx context.Context, input *AddTagsInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPost,
 		Path:   fullPath,
 		Body:   input.Tags,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to add tags to machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -567,22 +543,21 @@ type GetTagInput struct {
 
 func (c *InstancesClient) GetTag(ctx context.Context, input *GetTagInput) (string, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags", input.Key)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
 	if err != nil {
-		return "", pkgerrors.Wrap(err, "unable to get tag")
+		return "", pkgerrors.Wrap(err, "unable to get machine tag")
 	}
-	if respReader != nil {
-		defer respReader.Close()
-	}
+	defer respReader.Close()
 
 	var result string
 	decoder := json.NewDecoder(respReader)
 	if err = decoder.Decode(&result); err != nil {
-		return "", pkgerrors.Wrap(err, "unable to decode get tag response")
+		return "", pkgerrors.Wrap(err, "unable to decode get machine tag response")
 	}
 
 	return result, nil
@@ -594,17 +569,16 @@ type ListTagsInput struct {
 
 func (c *InstancesClient) ListTags(ctx context.Context, input *ListTagsInput) (map[string]interface{}, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "tags")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to list machine tags")
 	}
+	defer respReader.Close()
 
 	var result map[string]interface{}
 	decoder := json.NewDecoder(respReader)
@@ -624,7 +598,7 @@ type GetMetadataInput struct {
 // GetMetadata returns a single metadata entry associated with an instance.
 func (c *InstancesClient) GetMetadata(ctx context.Context, input *GetMetadataInput) (string, error) {
 	if input.Key == "" {
-		return "", fmt.Errorf("Missing metadata Key from input: %s", input.Key)
+		return "", fmt.Errorf("missing metadata key from input: %s", input.Key)
 	}
 
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "metadata", input.Key)
@@ -636,13 +610,13 @@ func (c *InstancesClient) GetMetadata(ctx context.Context, input *GetMetadataInp
 	if err != nil {
 		return "", pkgerrors.Wrap(err, "unable to get machine metadata")
 	}
-	if response != nil {
-		defer response.Body.Close()
-	}
+	defer response.Body.Close()
+
 	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return "", &errors.APIError{
 			StatusCode: response.StatusCode,
 			Code:       "ResourceNotFound",
+			Message:    fmt.Sprintf("machine metadata %q could not be found", input.Key),
 		}
 	}
 
@@ -673,12 +647,10 @@ func (c *InstancesClient) ListMetadata(ctx context.Context, input *ListMetadataI
 		Query:  query,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to list machine metadata")
 	}
+	defer respReader.Close()
 
 	var result map[string]string
 	decoder := json.NewDecoder(respReader)
@@ -696,18 +668,17 @@ type UpdateMetadataInput struct {
 
 func (c *InstancesClient) UpdateMetadata(ctx context.Context, input *UpdateMetadataInput) (map[string]string, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "metadata")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPost,
 		Path:   fullPath,
 		Body:   input.Metadata,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to update machine metadata")
 	}
+	defer respReader.Close()
 
 	var result map[string]string
 	decoder := json.NewDecoder(respReader)
@@ -726,7 +697,7 @@ type DeleteMetadataInput struct {
 // DeleteMetadata deletes a single metadata key from an instance
 func (c *InstancesClient) DeleteMetadata(ctx context.Context, input *DeleteMetadataInput) error {
 	if input.Key == "" {
-		return fmt.Errorf("Missing metadata Key from input: %s", input.Key)
+		return fmt.Errorf("missing metadata key from input: %s", input.Key)
 	}
 
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "metadata", input.Key)
@@ -738,9 +709,7 @@ func (c *InstancesClient) DeleteMetadata(ctx context.Context, input *DeleteMetad
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to delete machine metadata")
 	}
-	if respReader != nil {
-		defer respReader.Close()
-	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -752,6 +721,7 @@ type DeleteAllMetadataInput struct {
 // DeleteAllMetadata deletes all metadata keys from this instance
 func (c *InstancesClient) DeleteAllMetadata(ctx context.Context, input *DeleteAllMetadataInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.ID, "metadata")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
@@ -760,9 +730,7 @@ func (c *InstancesClient) DeleteAllMetadata(ctx context.Context, input *DeleteAl
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to delete all machine metadata")
 	}
-	if respReader != nil {
-		defer respReader.Close()
-	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -785,12 +753,10 @@ func (c *InstancesClient) Resize(ctx context.Context, input *ResizeInstanceInput
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to resize machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -811,12 +777,10 @@ func (c *InstancesClient) EnableFirewall(ctx context.Context, input *EnableFirew
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to enable machine firewall")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -837,12 +801,10 @@ func (c *InstancesClient) DisableFirewall(ctx context.Context, input *DisableFir
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to disable machine firewall")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -853,17 +815,16 @@ type ListNICsInput struct {
 
 func (c *InstancesClient) ListNICs(ctx context.Context, input *ListNICsInput) ([]*NIC, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.InstanceID, "nics")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to list machine NICs")
 	}
+	defer respReader.Close()
 
 	var result []*NIC
 	decoder := json.NewDecoder(respReader)
@@ -882,6 +843,7 @@ type GetNICInput struct {
 func (c *InstancesClient) GetNIC(ctx context.Context, input *GetNICInput) (*NIC, error) {
 	mac := strings.Replace(input.MAC, ":", "", -1)
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.InstanceID, "nics", mac)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
@@ -890,14 +852,13 @@ func (c *InstancesClient) GetNIC(ctx context.Context, input *GetNICInput) (*NIC,
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to get machine NIC")
 	}
-	if response != nil {
-		defer response.Body.Close()
-	}
-	switch response.StatusCode {
-	case http.StatusNotFound:
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return nil, &errors.APIError{
 			StatusCode: response.StatusCode,
 			Code:       "ResourceNotFound",
+			Message:    fmt.Sprintf("machine NIC %q could not be found", input.MAC),
 		}
 	}
 
@@ -922,6 +883,7 @@ type AddNICInput struct {
 // Warning: this operation causes the instance to restart.
 func (c *InstancesClient) AddNIC(ctx context.Context, input *AddNICInput) (*NIC, error) {
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.InstanceID, "nics")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPost,
 		Path:   fullPath,
@@ -931,11 +893,9 @@ func (c *InstancesClient) AddNIC(ctx context.Context, input *AddNICInput) (*NIC,
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to add NIC to machine")
 	}
-	if response != nil {
-		defer response.Body.Close()
-	}
-	switch response.StatusCode {
-	case http.StatusFound:
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusFound {
 		return nil, &errors.APIError{
 			StatusCode: response.StatusCode,
 			Code:       "ResourceFound",
@@ -964,6 +924,7 @@ type RemoveNICInput struct {
 func (c *InstancesClient) RemoveNIC(ctx context.Context, input *RemoveNICInput) error {
 	mac := strings.Replace(input.MAC, ":", "", -1)
 	fullPath := path.Join("/", c.client.AccountName, "machines", input.InstanceID, "nics", mac)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
@@ -972,17 +933,13 @@ func (c *InstancesClient) RemoveNIC(ctx context.Context, input *RemoveNICInput) 
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to remove NIC from machine")
 	}
-	if response == nil {
-		return pkgerrors.Wrap(err, "unable to remove NIC from machine")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
-	switch response.StatusCode {
-	case http.StatusNotFound:
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return &errors.APIError{
 			StatusCode: response.StatusCode,
 			Code:       "ResourceNotFound",
+			Message:    fmt.Sprintf("machine NIC %q could not be found", input.MAC),
 		}
 	}
 
@@ -1005,12 +962,10 @@ func (c *InstancesClient) Stop(ctx context.Context, input *StopInstanceInput) er
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to stop machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -1031,12 +986,10 @@ func (c *InstancesClient) Start(ctx context.Context, input *StartInstanceInput) 
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to start machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -1057,12 +1010,10 @@ func (c *InstancesClient) Reboot(ctx context.Context, input *RebootInstanceInput
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return pkgerrors.Wrap(err, "unable to reboot machine")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -1083,12 +1034,10 @@ func (c *InstancesClient) EnableDeletionProtection(ctx context.Context, input *E
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
-		return pkgerrors.Wrap(err, "unable to enable deletion protection")
+		return pkgerrors.Wrap(err, "unable to enable machine deletion protection")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -1109,12 +1058,10 @@ func (c *InstancesClient) DisableDeletionProtection(ctx context.Context, input *
 		Query:  params,
 	}
 	respReader, err := c.client.ExecuteRequestURIParams(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
-		return pkgerrors.Wrap(err, "unable to disable deletion protection")
+		return pkgerrors.Wrap(err, "unable to disable machine deletion protection")
 	}
+	defer respReader.Close()
 
 	return nil
 }

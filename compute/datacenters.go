@@ -40,12 +40,10 @@ func (c *DataCentersClient) List(ctx context.Context, _ *ListDataCentersInput) (
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to list data centers")
 	}
+	defer respReader.Close()
 
 	var intermediate map[string]string
 	decoder := json.NewDecoder(respReader)
@@ -53,8 +51,10 @@ func (c *DataCentersClient) List(ctx context.Context, _ *ListDataCentersInput) (
 		return nil, pkgerrors.Wrap(err, "unable to decode list data centers response")
 	}
 
+	var i int
+
 	keys := make([]string, len(intermediate))
-	i := 0
+	i = 0
 	for k := range intermediate {
 		keys[i] = k
 		i++

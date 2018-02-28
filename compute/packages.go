@@ -11,10 +11,10 @@ package compute
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 
 	"github.com/joyent/triton-go/client"
 	"github.com/pkg/errors"
@@ -57,19 +57,19 @@ func (c *PackagesClient) List(ctx context.Context, input *ListPackagesInput) ([]
 		query.Set("name", input.Name)
 	}
 	if input.Memory != 0 {
-		query.Set("memory", fmt.Sprintf("%d", input.Memory))
+		query.Set("memory", strconv.Itoa(int(input.Memory)))
 	}
 	if input.Disk != 0 {
-		query.Set("disk", fmt.Sprintf("%d", input.Disk))
+		query.Set("disk", strconv.Itoa(int(input.Disk)))
 	}
 	if input.Swap != 0 {
-		query.Set("swap", fmt.Sprintf("%d", input.Swap))
+		query.Set("swap", strconv.Itoa(int(input.Swap)))
 	}
 	if input.LWPs != 0 {
-		query.Set("lwps", fmt.Sprintf("%d", input.LWPs))
+		query.Set("lwps", strconv.Itoa(int(input.LWPs)))
 	}
 	if input.VCPUs != 0 {
-		query.Set("vcpus", fmt.Sprintf("%d", input.VCPUs))
+		query.Set("vcpus", strconv.Itoa(int(input.VCPUs)))
 	}
 	if input.Version != "" {
 		query.Set("version", input.Version)
@@ -84,12 +84,10 @@ func (c *PackagesClient) List(ctx context.Context, input *ListPackagesInput) ([]
 		Query:  query,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list packages")
 	}
+	defer respReader.Close()
 
 	var result []*Package
 	decoder := json.NewDecoder(respReader)
@@ -111,12 +109,10 @@ func (c *PackagesClient) Get(ctx context.Context, input *GetPackageInput) (*Pack
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get package")
 	}
+	defer respReader.Close()
 
 	var result *Package
 	decoder := json.NewDecoder(respReader)

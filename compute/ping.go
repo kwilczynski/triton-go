@@ -39,19 +39,12 @@ func (c *ComputeClient) Ping(ctx context.Context) (*PingOutput, error) {
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "unable to ping")
 	}
-	if response == nil {
-		return nil, pkgerrors.Wrap(err, "unable to ping")
-	}
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
+	defer response.Body.Close()
 
 	var result *PingOutput
 	decoder := json.NewDecoder(response.Body)
 	if err = decoder.Decode(&result); err != nil {
-		if err != nil {
-			return nil, pkgerrors.Wrap(err, "unable to decode ping response")
-		}
+		return nil, pkgerrors.Wrap(err, "unable to decode ping response")
 	}
 
 	return result, nil

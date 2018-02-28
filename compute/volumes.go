@@ -64,16 +64,14 @@ func (c *VolumesClient) List(ctx context.Context, input *ListVolumesInput) ([]*V
 		Path:   fullPath,
 		Query:  query,
 	}
-	resp, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if resp != nil {
-		defer resp.Close()
-	}
+	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list volumes")
 	}
+	defer respReader.Close()
 
 	var result []*Volume
-	decoder := json.NewDecoder(resp)
+	decoder := json.NewDecoder(respReader)
 	if err = decoder.Decode(&result); err != nil {
 		return nil, errors.Wrap(err, "unable to decode list volumes response")
 	}
@@ -118,16 +116,14 @@ func (c *VolumesClient) Create(ctx context.Context, input *CreateVolumeInput) (*
 		Path:   fullPath,
 		Body:   input.toAPI(),
 	}
-	resp, err := c.client.ExecuteRequest(ctx, reqInputs)
+	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create volume")
 	}
-	if resp != nil {
-		defer resp.Close()
-	}
+	defer respReader.Close()
 
 	var result *Volume
-	decoder := json.NewDecoder(resp)
+	decoder := json.NewDecoder(respReader)
 	if err = decoder.Decode(&result); err != nil {
 		return nil, errors.Wrap(err, "unable to decode create volume response")
 	}
@@ -145,17 +141,13 @@ func (c *VolumesClient) Delete(ctx context.Context, input *DeleteVolumeInput) er
 		Method: http.MethodDelete,
 		Path:   fullPath,
 	}
-	resp, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
+	response, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
 	if err != nil {
 		return errors.Wrap(err, "unable to delete volume")
 	}
-	if resp == nil {
-		return errors.Wrap(err, "unable to delete volume")
-	}
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone {
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusNotFound || response.StatusCode == http.StatusGone {
 		return nil
 	}
 
@@ -172,21 +164,16 @@ func (c *VolumesClient) Get(ctx context.Context, input *GetVolumeInput) (*Volume
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
-	resp, err := c.client.ExecuteRequestRaw(ctx, reqInputs)
+	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get volume")
 	}
-	if resp == nil {
-		return nil, errors.Wrap(err, "unable to get volume")
-	}
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
+	defer respReader.Close()
 
 	var result *Volume
-	decoder := json.NewDecoder(resp.Body)
+	decoder := json.NewDecoder(respReader)
 	if err = decoder.Decode(&result); err != nil {
-		return nil, errors.Wrap(err, "unable to decode get volume volume")
+		return nil, errors.Wrap(err, "unable to decode get volume response")
 	}
 
 	return result, nil
@@ -205,13 +192,11 @@ func (c *VolumesClient) Update(ctx context.Context, input *UpdateVolumeInput) er
 		Path:   fullPath,
 		Body:   input,
 	}
-	resp, err := c.client.ExecuteRequest(ctx, reqInputs)
+	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
 	if err != nil {
 		return errors.Wrap(err, "unable to update volume")
 	}
-	if resp != nil {
-		defer resp.Close()
-	}
+	defer respReader.Close()
 
 	return nil
 }
