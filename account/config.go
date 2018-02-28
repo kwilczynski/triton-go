@@ -31,19 +31,18 @@ type Config struct {
 type GetConfigInput struct{}
 
 // GetConfig outputs configuration for your account.
-func (c *ConfigClient) Get(ctx context.Context, input *GetConfigInput) (*Config, error) {
+func (c *ConfigClient) Get(ctx context.Context, _ *GetConfigInput) (*Config, error) {
 	fullPath := path.Join("/", c.client.AccountName, "config")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get account config")
 	}
+	defer respReader.Close()
 
 	var result *Config
 	decoder := json.NewDecoder(respReader)
@@ -62,18 +61,17 @@ type UpdateConfigInput struct {
 // UpdateConfig updates configuration values for your account.
 func (c *ConfigClient) Update(ctx context.Context, input *UpdateConfigInput) (*Config, error) {
 	fullPath := path.Join("/", c.client.AccountName, "config")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPost,
 		Path:   fullPath,
 		Body:   input,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update account config")
 	}
+	defer respReader.Close()
 
 	var result *Config
 	decoder := json.NewDecoder(respReader)

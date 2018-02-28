@@ -95,7 +95,7 @@ func TestGetConfiguration(t *testing.T) {
 	})
 
 	t.Run("bad_decode", func(t *testing.T) {
-		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "config"), getConfigBadeDecode)
+		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "config"), getConfigBadDecode)
 
 		_, err := do(context.Background(), accountClient)
 		if err == nil {
@@ -168,10 +168,10 @@ func getConfigSuccess(req *http.Request) (*http.Response, error) {
 
 	body := strings.NewReader(`{
   "default_network": "45607081-4cd2-45c8-baf7-79da760fffaa"
-}
-`)
+}`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -181,15 +181,16 @@ func getConfigError(req *http.Request) (*http.Response, error) {
 	return nil, getConfigErrorType
 }
 
-func getConfigBadeDecode(req *http.Request) (*http.Response, error) {
+func getConfigBadDecode(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
   "default_network": "45607081-4cd2-45c8-baf7-79da760fffaa",
 }`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -198,10 +199,11 @@ func getConfigBadeDecode(req *http.Request) (*http.Response, error) {
 func getConfigEmpty(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -211,11 +213,10 @@ func updateConfigSuccess(req *http.Request) (*http.Response, error) {
 
 	body := strings.NewReader(`{
   "default_network": "c00cbe98-7dea-44d3-b644-5bd078700bf8"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil

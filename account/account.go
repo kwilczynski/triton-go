@@ -39,19 +39,18 @@ type Account struct {
 
 type GetInput struct{}
 
-func (c AccountClient) Get(ctx context.Context, input *GetInput) (*Account, error) {
+func (c AccountClient) Get(ctx context.Context, _ *GetInput) (*Account, error) {
 	fullPath := path.Join("/", c.Client.AccountName)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.Client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get account details")
 	}
+	defer respReader.Close()
 
 	var result *Account
 	decoder := json.NewDecoder(respReader)
@@ -80,6 +79,7 @@ type UpdateInput struct {
 // TODO(jen20) Work out a safe way to test this
 func (c AccountClient) Update(ctx context.Context, input *UpdateInput) (*Account, error) {
 	fullPath := path.Join("/", c.Client.AccountName)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPut,
 		Path:   fullPath,
@@ -89,9 +89,7 @@ func (c AccountClient) Update(ctx context.Context, input *UpdateInput) (*Account
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update account")
 	}
-	if respReader != nil {
-		defer respReader.Close()
-	}
+	defer respReader.Close()
 
 	var result *Account
 	decoder := json.NewDecoder(respReader)

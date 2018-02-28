@@ -106,7 +106,7 @@ func TestGetAccount(t *testing.T) {
 	})
 
 	t.Run("bad_decode", func(t *testing.T) {
-		testutils.RegisterResponder("GET", path.Join("/", accountUrl), getAccountBadeDecode)
+		testutils.RegisterResponder("GET", path.Join("/", accountUrl), getAccountBadDecode)
 
 		_, err := do(context.Background(), accountClient)
 		if err == nil {
@@ -181,16 +181,16 @@ func getAccountSuccess(req *http.Request) (*http.Response, error) {
   "id": "b89d9dd3-62ce-4f6f-eb0d-f78e57d515d9",
   "login": "barbar",
   "email": "barbar@example.com",
-  "companyName": "Example Inc",
+  "companyName": "Example, Inc.",
   "firstName": "BarBar",
   "lastName": "Jinks",
-  "phone": "123-456-7890",
+  "phone": "(123) 456-7890",
   "updated": "2015-12-21T11:48:54.884Z",
   "created": "2015-12-21T11:48:54.884Z"
-}
-`)
+}`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -200,7 +200,7 @@ func getAccountError(req *http.Request) (*http.Response, error) {
 	return nil, getAccountErrorType
 }
 
-func getAccountBadeDecode(req *http.Request) (*http.Response, error) {
+func getAccountBadDecode(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
@@ -208,15 +208,16 @@ func getAccountBadeDecode(req *http.Request) (*http.Response, error) {
   "id": "b89d9dd3-62ce-4f6f-eb0d-f78e57d515d9",
   "login": "barbar",
   "email": "barbar@example.com",
-  "companyName": "Example Inc",
+  "companyName": "Example, Inc.",
   "firstName": "BarBar",
   "lastName": "Jinks",
-  "phone": "123-456-7890",
+  "phone": "(123) 456-7890",
   "updated": "2015-12-21T11:48:54.884Z",
   "created": "2015-12-21T11:48:54.884Z",
 }`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -225,10 +226,11 @@ func getAccountBadeDecode(req *http.Request) (*http.Response, error) {
 func getAccountEmpty(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -237,16 +239,19 @@ func updateAccountSuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-    "id": "123-3456-2335",
-    "login": "testuser",
-    "email": "barbar@example.com",
-    "updated": "2015-12-23T06:41:11.032Z",
-    "created": "2015-12-23T06:41:11.032Z"
-  }
-`)
+  "id": "b89d9dd3-62ce-4f6f-eb0d-f78e57d515d9",
+  "login": "barbar",
+  "email": "barbar@example.com",
+  "companyName": "Example, Inc.",
+  "firstName": "BarBar",
+  "lastName": "Jinks",
+  "phone": "1 (234) 567 890",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z"
+}`)
 
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil

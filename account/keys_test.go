@@ -23,8 +23,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const testAccCreateKeyMaterial = `ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBOJ5z6jTdY3SYK2Nc+MQLSQstAOzxFqDN00MJ9SMhJea8ZQbZFlhCAZBFE4TUBDI3zXBxFjygh84lb1QlNu1dmZeoQ10MThuowZllBAfg9Eb5RkXqLvDdYh9+rLdEdUL4+aiYZ8JYtQ+K5ZnogZoxdzNQ3WnVhMGJIrj1zcRveUSvQ6tMhaEQDxDWrAMDLxnLI/6SNmkhdF1ZKE8iQ+BnazYp0vg5jAzkHzEYJY9kFUOubupOxio93B9OTkpQ0jZD+J9iR1t8Me3JdhHy85inaAFc0fkjznDYluV8aqfIprD/WE9grQ/GfEYfsvQdQr1ljLBJZdad7DvnKqU0M4vJ James@jn-mpb15`
-const testAccCreateKeyFingerprint = `ab:f4:8f:bc:26:e1:cf:1d:06:a3:9d:40:39:7c:5a:78`
+const (
+	testAccCreateKeyMaterial    = `ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBOJ5z6jTdY3SYK2Nc+MQLSQstAOzxFqDN00MJ9SMhJea8ZQbZFlhCAZBFE4TUBDI3zXBxFjygh84lb1QlNu1dmZeoQ10MThuowZllBAfg9Eb5RkXqLvDdYh9+rLdEdUL4+aiYZ8JYtQ+K5ZnogZoxdzNQ3WnVhMGJIrj1zcRveUSvQ6tMhaEQDxDWrAMDLxnLI/6SNmkhdF1ZKE8iQ+BnazYp0vg5jAzkHzEYJY9kFUOubupOxio93B9OTkpQ0jZD+J9iR1t8Me3JdhHy85inaAFc0fkjznDYluV8aqfIprD/WE9grQ/GfEYfsvQdQr1ljLBJZdad7DvnKqU0M4vJ James@jn-mpb15`
+	testAccCreateKeyFingerprint = `ab:f4:8f:bc:26:e1:cf:1d:06:a3:9d:40:39:7c:5a:78`
+)
 
 var (
 	listKeysErrorType  = errors.New("unable to list keys")
@@ -239,12 +241,12 @@ func TestGetKey(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "EOF") {
-			t.Errorf("expected error to contain EOF: found %s", err)
+			t.Errorf("expected error to contain EOF, got %v", err)
 		}
 	})
 
 	t.Run("bad_decode", func(t *testing.T) {
-		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "keys", "my-test-key"), getKeyBadeDecode)
+		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "keys", "my-test-key"), getKeyBadDecode)
 
 		_, err := do(context.Background(), accountClient)
 		if err == nil {
@@ -252,7 +254,7 @@ func TestGetKey(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "invalid character") {
-			t.Errorf("expected decode to fail: found %s", err)
+			t.Errorf("expected decode to fail, got %v", err)
 		}
 	})
 
@@ -268,7 +270,7 @@ func TestGetKey(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), "unable to get key") {
-			t.Errorf("expected error to equal testError: found %s", err)
+			t.Errorf("expected error to equal test error, got %v", err)
 		}
 	})
 }
@@ -387,7 +389,7 @@ func TestListKeys(t *testing.T) {
 	})
 
 	t.Run("bad_decode", func(t *testing.T) {
-		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "keys"), listKeysBadeDecode)
+		testutils.RegisterResponder("GET", path.Join("/", accountUrl, "keys"), listKeysBadDecode)
 
 		_, err := do(context.Background(), accountClient)
 		if err == nil {
@@ -421,19 +423,19 @@ func getKeySuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-    "id": "4fc13ac6-1e7d-cd79-f3d2-96276af0d638",
-    "login": "barbar",
-    "email": "barbar@example.com",
-    "companyName": "Example",
-    "firstName": "BarBar",
-    "lastName": "Jinks",
-    "phone": "(123)457-6890",
-    "updated": "2015-12-23T06:41:11.032Z",
-    "created": "2015-12-23T06:41:11.032Z"
-  }
-`)
+  "id": "4fc13ac6-1e7d-cd79-f3d2-96276af0d638",
+  "login": "barbar",
+  "email": "barbar@example.com",
+  "companyName": "Example, Inc.",
+  "firstName": "BarBar",
+  "lastName": "Jinks",
+  "phone": "(123) 456-7890",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z"
+}`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -443,22 +445,24 @@ func getKeyError(req *http.Request) (*http.Response, error) {
 	return nil, getKeyErrorType
 }
 
-func getKeyBadeDecode(req *http.Request) (*http.Response, error) {
+func getKeyBadDecode(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
 	body := strings.NewReader(`{
-    "id": "4fc13ac6-1e7d-cd79-f3d2-96276af0d638",
-    "login": "barbar",
-    "email": "barbar@example.com",
-    "companyName": "Example",
-    "firstName": "BarBar",
-    "lastName": "Jinks",
-    "phone": "(123)457-6890",
-    "updated": "2015-12-23T06:41:11.032Z",
-    "created": "2015-12-23T06:41:11.032Z",}`)
+  "id": "4fc13ac6-1e7d-cd79-f3d2-96276af0d638",
+  "login": "barbar",
+  "email": "barbar@example.com",
+  "companyName": "Example, Inc.",
+  "firstName": "BarBar",
+  "lastName": "Jinks",
+  "phone": "(123) 456-7890",
+  "updated": "2015-12-23T06:41:11.032Z",
+  "created": "2015-12-23T06:41:11.032Z",
+}`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -467,10 +471,11 @@ func getKeyBadeDecode(req *http.Request) (*http.Response, error) {
 func getKeyEmpty(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -479,8 +484,9 @@ func deleteKeySuccess(req *http.Request) (*http.Response, error) {
 	header.Add("Content-Type", "application/json")
 
 	return &http.Response{
-		StatusCode: 204,
+		StatusCode: http.StatusNoContent,
 		Header:     header,
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -496,11 +502,10 @@ func createKeySuccess(req *http.Request) (*http.Response, error) {
   "name": "my-test-key",
   "fingerprint": "03:7f:8e:ef:da:3d:3b:9e:a4:82:67:71:8c:35:2c:aa",
   "key": "<...>"
-}
-`)
+}`)
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
@@ -513,10 +518,11 @@ func createKeyError(req *http.Request) (*http.Response, error) {
 func listKeysEmpty(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
-		Body:       ioutil.NopCloser(strings.NewReader("")),
+		Body:       http.NoBody,
 	}, nil
 }
 
@@ -524,33 +530,31 @@ func listKeysSuccess(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`[
-	{
-    "name": "barbar",
-    "fingerprint": "03:7f:8e:ef:da:3d:3b:9e:a4:82:67:71:8c:35:2c:aa",
-    "key": "<...>"
-  }
-]`)
+	body := strings.NewReader(`[{
+  "name": "barbar",
+  "fingerprint": "03:7f:8e:ef:da:3d:3b:9e:a4:82:67:71:8c:35:2c:aa",
+  "key": "<...>"
+}]`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil
 }
 
-func listKeysBadeDecode(req *http.Request) (*http.Response, error) {
+func listKeysBadDecode(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Add("Content-Type", "application/json")
 
-	body := strings.NewReader(`{[
-	{
-    "name": "barbar",
-    "fingerprint": "03:7f:8e:ef:da:3d:3b:9e:a4:82:67:71:8c:35:2c:aa",
-    "key": "<...>"
-  }
-]}`)
+	body := strings.NewReader(`{[{
+  "name": "barbar",
+  "fingerprint": "03:7f:8e:ef:da:3d:3b:9e:a4:82:67:71:8c:35:2c:aa",
+  "key": "<...>"
+}]}`)
+
 	return &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Header:     header,
 		Body:       ioutil.NopCloser(body),
 	}, nil

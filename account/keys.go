@@ -40,17 +40,16 @@ type ListKeysInput struct{}
 // account.
 func (c *KeysClient) List(ctx context.Context, _ *ListKeysInput) ([]*Key, error) {
 	fullPath := path.Join("/", c.client.AccountName, "keys")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list keys")
 	}
+	defer respReader.Close()
 
 	var result []*Key
 	decoder := json.NewDecoder(respReader)
@@ -67,17 +66,16 @@ type GetKeyInput struct {
 
 func (c *KeysClient) Get(ctx context.Context, input *GetKeyInput) (*Key, error) {
 	fullPath := path.Join("/", c.client.AccountName, "keys", input.KeyName)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodGet,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get key")
 	}
+	defer respReader.Close()
 
 	var result *Key
 	decoder := json.NewDecoder(respReader)
@@ -94,17 +92,16 @@ type DeleteKeyInput struct {
 
 func (c *KeysClient) Delete(ctx context.Context, input *DeleteKeyInput) error {
 	fullPath := path.Join("/", c.client.AccountName, "keys", input.KeyName)
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodDelete,
 		Path:   fullPath,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return errors.Wrap(err, "unable to delete key")
 	}
+	defer respReader.Close()
 
 	return nil
 }
@@ -122,18 +119,17 @@ type CreateKeyInput struct {
 // CreateKey uploads a new OpenSSH key to Triton for use in HTTP signing and SSH.
 func (c *KeysClient) Create(ctx context.Context, input *CreateKeyInput) (*Key, error) {
 	fullPath := path.Join("/", c.client.AccountName, "keys")
+
 	reqInputs := client.RequestInput{
 		Method: http.MethodPost,
 		Path:   fullPath,
 		Body:   input,
 	}
 	respReader, err := c.client.ExecuteRequest(ctx, reqInputs)
-	if respReader != nil {
-		defer respReader.Close()
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create key")
 	}
+	defer respReader.Close()
 
 	var result *Key
 	decoder := json.NewDecoder(respReader)
